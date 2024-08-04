@@ -18,6 +18,10 @@ typedef enum timer_modes{
 
 typedef struct button {
     int x, y, w, h;
+    Color color_normal, color_hover;
+    const char* text;
+    int font_size;
+    void (*on_click)();
 } button_t;
 
 ///////////////////////////////////
@@ -27,27 +31,30 @@ float delta_time = 0;
 int sec = 0, min = 0, hour = 0;
 timer_modes_t mode = NONE; 
 const char* mode_text[] = {"NONE", "TIMER", "STOPWATCH"};
+button_t buton1;
 
 ///////////////////////////////////
 // Fonksiyonlar
 
 int mouse_is_over(button_t* btn)
 {
-    if(btn->x < GetMouseX() && btn->x + btn->w > GetMouseX() && btn->y < GetMouseY() && btn->y + btn->h > GetMouseY())
-    {
-        return 1;
+    return (btn->x < GetMouseX() && btn->x + btn->w > GetMouseX() &&
+            btn->y < GetMouseY() && btn->y + btn->h > GetMouseY());
+}
+
+void draw_button(button_t* btn)
+{
+    Color color = mouse_is_over(btn) ? btn->color_hover : btn->color_normal;
+    DrawRectangle(btn->x, btn->y, btn->w, btn->h, color);
+    DrawText(btn->text, btn->x + (btn->h - btn->font_size) / 2, btn->y + (btn->h - btn->font_size) / 2, btn->font_size, BLACK);
+}
+
+void handle_button_click(button_t* btn) {
+    if (mouse_is_over(btn) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+        if (btn->on_click != NULL) {
+            btn->on_click();
+        }
     }
-    return 0;
-}
-
-void draw_button(button_t* btn, Color button_color)
-{
-    DrawRectangle(btn->x, btn->y, btn->w, btn->h, button_color);
-}
-
-void draw_button_text(const char* str, button_t* btn, int font_size, Color color)
-{
-    DrawText(str, btn->x + (btn->h - font_size) / 2, btn->y + (btn->h - font_size) / 2, font_size, color);
 }
 
 void mode_timer()
@@ -55,7 +62,7 @@ void mode_timer()
     if(hour < 1 && min < 1 && sec < 1) {
         sec = 0, min = 0, hour = 0;
         mode = NONE;
-        return;
+        buton1.text = mode_text[mode];
     }
 
     delta_time += GetFrameTime();
@@ -95,6 +102,25 @@ void mode_stopwatch()
     }
 }
 
+///////////////////////////////////
+// Buton Callbackleri
+
+void mode_change() {
+    mode++;
+    if (mode == MODE_COUNT) {mode = 0;}
+    buton1.text = mode_text[mode];
+}
+
+void dec_hour() {hour--;}
+void dec_min() {min--;}
+void dec_sec() {sec--;}
+void inc_sec() {sec++;}
+void inc_min() {min++;}
+void inc_hour() {hour++;}
+
+///////////////////////////////////
+// Main
+
 int main() {
 
     #if defined(_WIN32) || defined(_WIN64)
@@ -113,14 +139,22 @@ int main() {
       
     Color bg_color = DARKBROWN; 
 
-    button_t buton1 = {.x = 10, .y = 10, .w = 80, .h = 40};
+    // Buton1 daha önce tanımlanmıştı
+    buton1 = (button_t){.x = 10, .y = 10, .w = 80, .h = 40, 
+        .color_normal = WHITE, .color_hover = GRAY, .font_size = 28, .text = mode_text[mode], .on_click = mode_change};
 
-    button_t dec_hour = {.x = 10, .y = 150, .w = 40, .h = 40};
-    button_t dec_min = {.x = 60, .y = 150, .w = 40, .h = 40};
-    button_t dec_sec = {.x = 110, .y = 150, .w = 40, .h = 40};
-    button_t inc_sec = {.x = 160, .y = 150, .w = 40, .h = 40};
-    button_t inc_min = {.x = 210, .y = 150, .w = 40, .h = 40};
-    button_t inc_hour = {.x = 260, .y = 150, .w = 40, .h = 40};
+    button_t btn_dec_hour = {.x = 10, .y = 150, .w = 40, .h = 40, 
+        .color_normal = WHITE, .color_hover = GRAY, .font_size = 28, .text = "-h", .on_click = dec_hour};
+    button_t btn_dec_min = {.x = 60, .y = 150, .w = 40, .h = 40, 
+        .color_normal = WHITE, .color_hover = GRAY, .font_size = 28, .text = "-m", .on_click = dec_min};
+    button_t btn_dec_sec = {.x = 110, .y = 150, .w = 40, .h = 40, 
+        .color_normal = WHITE, .color_hover = GRAY, .font_size = 28, .text = "-s", .on_click = dec_sec};
+    button_t btn_inc_sec = {.x = 160, .y = 150, .w = 40, .h = 40, 
+        .color_normal = WHITE, .color_hover = GRAY, .font_size = 28, .text = "+s", .on_click = inc_sec};
+    button_t btn_inc_min = {.x = 210, .y = 150, .w = 40, .h = 40, 
+        .color_normal = WHITE, .color_hover = GRAY, .font_size = 28, .text = "+m", .on_click = inc_min};
+    button_t btn_inc_hour = {.x = 260, .y = 150, .w = 40, .h = 40, 
+        .color_normal = WHITE, .color_hover = GRAY, .font_size = 28, .text = "+h", .on_click = inc_hour};
 
     while(!WindowShouldClose())
     {
@@ -152,84 +186,22 @@ int main() {
         ClearBackground(bg_color);
 
         // mod butonu
-        if(mouse_is_over(&buton1)) {
-            draw_button(&buton1, GRAY);
-            if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                mode++;
-                if(mode == MODE_COUNT) {
-                    mode = 0;
-                }
-            }
-        } else {
-            draw_button(&buton1, WHITE);
-        }
-        draw_button_text(mode_text[mode], &buton1, 28, BLACK);
+        draw_button(&buton1);
+        handle_button_click(&buton1);
 
-        // dec_hour 
-        if(mouse_is_over(&dec_hour)) {
-            draw_button(&dec_hour, GRAY);
-            if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                hour--;
-            }
-        } else {
-            draw_button(&dec_hour, WHITE);
-        }
-        draw_button_text("-h", &dec_hour, 28, BLACK);
-
-        // dec_min 
-        if(mouse_is_over(&dec_min)) {
-            draw_button(&dec_min, GRAY);
-            if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                min--;
-            }
-        } else {
-            draw_button(&dec_min, WHITE);
-        }
-        draw_button_text("-m", &dec_min, 28, BLACK);
-
-        // dec_sec 
-        if(mouse_is_over(&dec_sec)) {
-            draw_button(&dec_sec, GRAY);
-            if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                sec--;
-            }
-        } else {
-            draw_button(&dec_sec, WHITE);
-        }
-        draw_button_text("-s", &dec_sec, 28, BLACK);
-
-        // inc_sec 
-        if(mouse_is_over(&inc_sec)) {
-            draw_button(&inc_sec, GRAY);
-            if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                sec++;
-            }
-        } else {
-            draw_button(&inc_sec, WHITE);
-        }
-        draw_button_text("+s", &inc_sec, 28, BLACK);
-
-        // inc_min
-        if(mouse_is_over(&inc_min)) {
-            draw_button(&inc_min, GRAY);
-            if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                min++;
-            }
-        } else {
-            draw_button(&inc_min, WHITE);
-        }
-        draw_button_text("+m", &inc_min, 28, BLACK);
-
-        // inc_hour 
-        if(mouse_is_over(&inc_hour)) {
-            draw_button(&inc_hour, GRAY);
-            if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                hour++;
-            }
-        } else {
-            draw_button(&inc_hour, WHITE);
-        }
-        draw_button_text("+h", &inc_hour, 28, BLACK);
+        // süre butonları
+        draw_button(&btn_dec_hour);
+        handle_button_click(&btn_dec_hour);
+        draw_button(&btn_dec_min);
+        handle_button_click(&btn_dec_min);
+        draw_button(&btn_dec_sec);
+        handle_button_click(&btn_dec_sec);
+        draw_button(&btn_inc_sec);
+        handle_button_click(&btn_inc_sec);
+        draw_button(&btn_inc_min);
+        handle_button_click(&btn_inc_min);
+        draw_button(&btn_inc_hour);
+        handle_button_click(&btn_inc_hour);
 
         
         // saati çizmece
