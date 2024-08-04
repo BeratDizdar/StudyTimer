@@ -26,6 +26,7 @@ typedef struct button {
 float delta_time = 0; 
 int sec = 0, min = 0, hour = 0;
 timer_modes_t mode = NONE; 
+const char* mode_text[] = {"NONE", "TIMER", "STOPWATCH"};
 
 ///////////////////////////////////
 // Fonksiyonlar
@@ -148,8 +149,7 @@ int main() {
         } else {
             draw_button(&buton1, WHITE);
         }
-        DrawText(TextFormat("%s", (mode == 0) ? "NONE" : 
-                                (mode == 1) ? "TIMER" : "STOPWATCH" ), buton1.x + 6, buton1.y + 6, buton1.h - 12, BLACK);
+        draw_button_text(mode_text[mode], &buton1, 28, BLACK);
 
         // dec_hour 
         if(mouse_is_over(&dec_hour)) {
