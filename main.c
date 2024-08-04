@@ -72,6 +72,10 @@ void mode_timer()
             sec = 59;
         }
     }
+
+    if(hour < 0) hour = 0;
+    if(min < 0) min = 0;
+    if(sec < 0) sec = 0;
 }
 
 void mode_stopwatch()
@@ -92,6 +96,16 @@ void mode_stopwatch()
 }
 
 int main() {
+
+    #if defined(_WIN32) || defined(_WIN64)
+        // Windows-specific code
+        //SetConfigFlags(FLAG_WINDOW_UNDECORATED);
+    #elif defined(__linux__)
+        // Linux-specific code
+        SetConfigFlags(FLAG_WINDOW_UNDECORATED);
+    #endif
+    
+    SetTraceLogLevel(LOG_NONE);
 
     InitWindow(500, 200, "StudyTimer");
     SetTargetFPS(60);
