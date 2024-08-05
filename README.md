@@ -12,13 +12,18 @@ StudyTimer, kullanıcıların zamanlayıcı ve kronometre işlevlerini kolayca k
 
 ### Windows
 
-1. `StudyTimer-w64.exe` dosyasını [buradan](https://github.com/BeratDizdar/StudyTimer/releases) indirin ve çalıştırın.
+1. İşlemcinize göre `StudyTimer-w64.exe` veya `StudyTimer-w32.exe` dosyasını [buradan](https://github.com/BeratDizdar/StudyTimer/releases) indirin ve çalıştırın.
 2. Daha rahat kullanabilmek için güvenlik duvarından izin verebilirsiniz.
 
 ### Linux
 
-1. `StudyTimer-Linux.exe` dosyasını [buradan](https://github.com/BeratDizdar/StudyTimer/releases) indirin ve çalıştırın.
-2. Aşağıdaki komutu çalıştırarak uygulamayı başlatın:
+1. `StudyTimer-Linux` dosyasını [buradan](https://github.com/BeratDizdar/StudyTimer/releases) indirin ve çalıştırın.
+2. İndirilen dosyayı çalıştırılabilir hale getirmek için aşağıdaki komutu çalıştırın:
    ```bash
-   ./StudyTimer
+   chmod +x StudyTimer-Linux
+   ```
+chmod +x StudyTimer
+3. Aşağıdaki komutu çalıştırarak uygulamayı başlatın:
+   ```bash
+   ./StudyTimer-Linux
    ```
