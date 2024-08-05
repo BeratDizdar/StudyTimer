@@ -22,7 +22,7 @@ StudyTimer, kullanıcıların zamanlayıcı ve kronometre işlevlerini kolayca k
    ```bash
    chmod +x StudyTimer-Linux
    ```
-chmod +x StudyTimer
+   
 3. Aşağıdaki komutu çalıştırarak uygulamayı başlatın:
    ```bash
    ./StudyTimer-Linux
