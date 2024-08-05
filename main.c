@@ -2,21 +2,25 @@
 #include <stdio.h>
 
 #define mode_button_char_size 28
-#define max_sec 60
-#define max_min 60
+#define max_sec 59
+#define max_min 59
 #define max_hour 24
 
 ///////////////////////////////////
 // types
 
-typedef enum timer_modes{
+typedef unsigned char byte;
+typedef byte flag;
+
+typedef enum timer_modes {
     NONE = 0,
     TIMER,
     STOPWATCH,
     MODE_COUNT,
 } timer_modes_t;
 
-typedef struct button {
+// TODO: yazı rengi de ekle
+typedef struct button { // buton ama her şeyde kullanılabilir. ;)
     int x, y, w, h;
     Color color_normal, color_hover;
     const char* text;
@@ -29,8 +33,13 @@ typedef struct button {
 
 float delta_time = 0; 
 int sec = 0, min = 0, hour = 0;
+flag flag_start;
+
+Color bg_color;
+
 timer_modes_t mode = NONE; 
 const char* mode_text[] = {"NONE", "TIMER", "STOPWATCH"};
+
 button_t buton1;
 
 ///////////////////////////////////
@@ -59,34 +68,46 @@ void handle_button_click(button_t* btn) {
 
 void mode_timer()
 {
-    if(hour < 1 && min < 1 && sec < 1) {
-        sec = 0, min = 0, hour = 0;
-        mode = NONE;
-        buton1.text = mode_text[mode];
+    if(sec > max_sec)
+    {
+        min++;
+        sec -= 60;
     }
 
-    delta_time += GetFrameTime();
-    if(delta_time > 1){
-        delta_time = 0;
-        if(sec > 0) {
-            sec--;
-        } else if(min > 0) {
-            min--;
-            sec = 59;
-        } else if(hour > 0) {
-            hour--;
-            min = 59;
-            sec = 59;
+    if(flag_start) {
+        if(hour < 1 && min < 1 && sec < 1) {
+            sec = 0, min = 0, hour = 0;
+            mode = NONE;
+            buton1.text = mode_text[mode];
         }
-    }
 
-    if(hour < 0) hour = 0;
-    if(min < 0) min = 0;
-    if(sec < 0) sec = 0;
+        delta_time += GetFrameTime();
+        if(delta_time > 1){
+            delta_time = 0;
+            if(sec > 0) {
+                sec--;
+            } else if(min > 0) {
+                min--;
+                sec = max_sec;
+            } else if(hour > 0) {
+                hour--;
+                min = max_min;
+                sec = max_sec;
+            }
+        }
+
+        if(hour < 0) hour = 0;
+        if(min < 0) min = 0;
+        if(sec < 0) sec = 0;         
+    }
+    
 }
 
 void mode_stopwatch()
 {
+    
+
+
     delta_time += GetFrameTime();
     if(delta_time > 1){
         sec++;
@@ -106,17 +127,31 @@ void mode_stopwatch()
 // Buton Callbackleri
 
 void mode_change() {
+    flag_start = 0;
     mode++;
     if (mode == MODE_COUNT) {mode = 0;}
     buton1.text = mode_text[mode];
 }
+void change_bg_color() {
+    static int current_color_index = 0;
+    Color color_palette[] = {BLACK, MAGENTA, BEIGE, DARKPURPLE, DARKGREEN, RED, DARKBROWN, 
+                            VIOLET, MAROON, GOLD, DARKGRAY, DARKBLUE, BLUE, GREEN, PURPLE, 
+                            ORANGE, YELLOW, LIME, SKYBLUE};
+    int palette_size = sizeof(color_palette) / sizeof(color_palette[0]);
+    current_color_index = (current_color_index + 1) % palette_size;
+    bg_color = color_palette[current_color_index];
+}
+void start() {
+    flag_start = (flag_start) ? 0 : 1;
+}
 
-void dec_hour() {hour--;}
-void dec_min() {min--;}
-void dec_sec() {sec--;}
-void inc_sec() {sec++;}
-void inc_min() {min++;}
-void inc_hour() {hour++;}
+void dec_hour() {if(IsKeyDown(KEY_LEFT_SHIFT)){hour-=10;} else{hour--;}}
+void dec_min() {if(IsKeyDown(KEY_LEFT_SHIFT)){min-=10;} else{min--;}}
+void dec_sec() {if(IsKeyDown(KEY_LEFT_SHIFT)){sec-=10;} else{sec--;}}
+void inc_sec() {if(IsKeyDown(KEY_LEFT_SHIFT)){sec+=10;} else{sec++;}}
+void inc_min() {if(IsKeyDown(KEY_LEFT_SHIFT)){min+=10;} else{min++;}}
+void inc_hour() {if(IsKeyDown(KEY_LEFT_SHIFT)){hour+=10;} else{hour++;}}
+void reset_time() {flag_start = 0; hour = 0; min = 0; sec = 0;}
 
 ///////////////////////////////////
 // Main
@@ -136,8 +171,9 @@ int main() {
     InitWindow(500, 200, "StudyTimer");
     SetTargetFPS(60);
 
+    flag_start = 0;
       
-    Color bg_color = DARKBROWN; 
+    bg_color = BLACK; 
 
     // Buton1 daha önce tanımlanmıştı
     buton1 = (button_t){.x = 10, .y = 10, .w = 80, .h = 40, 
@@ -149,36 +185,45 @@ int main() {
         .color_normal = WHITE, .color_hover = GRAY, .font_size = 28, .text = "-m", .on_click = dec_min};
     button_t btn_dec_sec = {.x = 110, .y = 150, .w = 40, .h = 40, 
         .color_normal = WHITE, .color_hover = GRAY, .font_size = 28, .text = "-s", .on_click = dec_sec};
-    button_t btn_inc_sec = {.x = 160, .y = 150, .w = 40, .h = 40, 
+    button_t btn_start = {.x = 160, .y = 150, .w = 40, .h = 40, 
+        .color_normal = WHITE, .color_hover = GRAY, .font_size = 28, .text = " >", .on_click = start};
+    button_t btn_inc_sec = {.x = 210, .y = 150, .w = 40, .h = 40, 
         .color_normal = WHITE, .color_hover = GRAY, .font_size = 28, .text = "+s", .on_click = inc_sec};
-    button_t btn_inc_min = {.x = 210, .y = 150, .w = 40, .h = 40, 
+    button_t btn_inc_min = {.x = 260, .y = 150, .w = 40, .h = 40, 
         .color_normal = WHITE, .color_hover = GRAY, .font_size = 28, .text = "+m", .on_click = inc_min};
-    button_t btn_inc_hour = {.x = 260, .y = 150, .w = 40, .h = 40, 
+    button_t btn_inc_hour = {.x = 310, .y = 150, .w = 40, .h = 40, 
         .color_normal = WHITE, .color_hover = GRAY, .font_size = 28, .text = "+h", .on_click = inc_hour};
+
+    button_t btn_reset = {.x = 360, .y = 150, .w = 85, .h = 40,
+        .color_normal = WHITE, .color_hover = GRAY, .font_size = 28, .text = "Reset", .on_click = reset_time};
+
+    button_t btn_color = {.x = 405, .y = 10, .w = 85, .h = 40,
+        .color_normal = WHITE, .color_hover = GRAY, .font_size = 28, .text = "Color", .on_click = change_bg_color};
 
     while(!WindowShouldClose())
     {
         //update
         switch (mode) {
         case NONE:
+            flag_start = 0;
             buton1.w = 3 * mode_button_char_size;
-            bg_color = BLACK;
             break;
         case TIMER:
             buton1.w = 4 * mode_button_char_size;
-            bg_color = RED;
             mode_timer();
             break;
         case STOPWATCH:
             buton1.w = 7 * mode_button_char_size;
-            bg_color = DARKBROWN;
-            mode_stopwatch();
+            if(flag_start) {
+                mode_stopwatch();
+            }
             break;
         default:
             printf("update-switch hatası\n");
             break;
         }
 
+        btn_start.text = (flag_start) ? " !>" : " >";
 
 
         // draw
@@ -189,7 +234,13 @@ int main() {
         draw_button(&buton1);
         handle_button_click(&buton1);
 
+        // renk butonu
+        draw_button(&btn_color);
+        handle_button_click(&btn_color);
+
         // süre butonları
+        draw_button(&btn_start);
+        handle_button_click(&btn_start);
         draw_button(&btn_dec_hour);
         handle_button_click(&btn_dec_hour);
         draw_button(&btn_dec_min);
@@ -202,6 +253,8 @@ int main() {
         handle_button_click(&btn_inc_min);
         draw_button(&btn_inc_hour);
         handle_button_click(&btn_inc_hour);
+        draw_button(&btn_reset);
+        handle_button_click(&btn_reset);
 
         
         // saati çizmece
