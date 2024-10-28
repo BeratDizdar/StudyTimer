@@ -21,7 +21,7 @@ Section "MainSection"
   ; Çıktı yolunu music klasörüne değiştir
   SetOutPath "$INSTDIR\sound"      
   ; Müzik dosyasını music klasörüne kopyala
-  File "sound\badapple.wav"      
+  File "sound\alarm1.wav"      
 
 
   ; Masaüstüne bir kısayol oluştur
@@ -39,7 +39,7 @@ SectionEnd
 Section "Uninstall"
   Delete "$INSTDIR\StudyTimer_w64.exe"
   Delete "$INSTDIR\studyt.ico"
-  Delete "$INSTDIR\sound\badapple.wav"  ; Müzik dosyasını music klasöründen kaldır
+  Delete "$INSTDIR\sound\alarm1.wav"  ; Müzik dosyasını music klasöründen kaldır
   Delete "$DESKTOP\StudyTimer.lnk"
   Delete "$SMPROGRAMS\StudyTimer\StudyTimer.lnk"
   RMDir "$SMPROGRAMS\StudyTimer"
